@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import Web3 from 'web3';
+import detectEthereumProvider from '@metamask/detect-provider'
+
 
 function App() {
   const [web3Api, setWeb3Api] = useState({
@@ -17,27 +19,16 @@ function App() {
       // metamask injects a global API into the website
       // this API allows website to request users, accounts and read data to the blockchain
       // sign messales and transactions
-      let provider = null;
+      const provider = await detectEthereumProvider()
 
-      if (window.ethereum) {
-        provider = window.ethereum;
-
-        try {
-          await provider.request({method: "eth_requestAccounts"});
-        } catch (e) {
-          console.error("User denied accounts access!")
-        }
-
-      } else if (window.web3) {
-        provider = window.web3.currentProvider;
-      } else if (!process.env.production) {
-        provider = new Web3.providers.HttpProvider("http://localhost:7545")
+      if (provider) {
+        setWeb3Api({
+          web3: new Web3(provider),
+          provider
+        })
+      } else {
+        console.error("Please install Metamask")
       }
-
-      setWeb3Api({
-        web3: new Web3(provider),
-        provider
-      })
     }
 
     loadProvider()
@@ -61,13 +52,18 @@ function App() {
             <strong>Account: </strong>
           </span>
           <h1>
-            { account ? account : "not connected" }
+            { account ? 
+              account : 
+              <button className="button is-small">
+                Connect 
+              </button>
+            }
           </h1>
-          <div className="balance-view is-size-2">
+          <div className="balance-view is-size-2  mb-4">
             Current Balance: <strong>10</strong> ETH
           </div>
-          <button className="btn mr-2">Donate</button>
-          <button className="btn">Withdraw</button>
+          <button className="button is-primary mr-2">Donate</button>
+          <button className="button is-link">Withdraw</button>
         </div>
       </div>
     </>
